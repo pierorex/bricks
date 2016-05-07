@@ -3,6 +3,8 @@
 
 using namespace std;
 
+const int NUMBER_OF_BRICKS = 7*5;
+
 
 void changeSize(int w, int h) { // callback to render nicely if the screen gets resized by the user
 	// Prevent a divide by zero, when window is too short
@@ -28,11 +30,21 @@ void changeSize(int w, int h) { // callback to render nicely if the screen gets 
 }
 
 
-NUMBER_OF_BRICKS = 7*5;
-brick = [<brick 1>, <brick 2>, <brick 3>, ...];
-bonus = [<brick 5>, <brick 10>, ...];
+class Ball {
+	float x, y;
+} ball;
+
+
+class Brick {
+	float x, y;
+} bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
 // bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
-ball = Ball();
+
+
+class Pad {
+	float x, y;
+} pad;
+
 
 void render(){ // Function to be called by openGL in every cycle of the main loop
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -50,15 +62,20 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 
 	// detect collisions with bricks
 	for (int i=0; i<NUMBER_OF_BRICKS; i++)
-		if (ball.collides(brick[i].x, brick[i].y))
+		if (ball.collidesBrick(brick[i].x, brick[i].y))
 			brick[i].destroy();
 
 	// detect collisions with bonuses
 	for (int i=0; i<count_falling_bonuses(); i++) {
-		if (bonus[i].is_falling && ball.collides(bonus[i].x, bonus[i].y)) {
+		if (bonus[i].is_falling && ball.collidesBrick(bonus[i].x, bonus[i].y)) {
 			apply_effect(bonus.effect);
 			bonus.destroy();
 		}
+	}
+
+	// detect collisions with pad
+	if (ball.collidesPad(pad.x, pad.y)) {
+		ball.reflectSpeedVector(pad.x, pad.y);
 	}
 
 	// draw bricks
@@ -76,6 +93,20 @@ void processKeys(unsigned char key, int x, int y) {
 	float magnitude = 10.0f;  // pad traslation magnitude
 
 	if (key == 27) exit(0);
+	
+}
+
+void processSpecialKeys(int key, int x, int y) {
+	switch (key) {
+	case GLUT_CURSOR_LEFT_ARROW:
+		pad.moveLeft();
+		break;
+	case GLUT_CURSOR_RIGHT_ARROW:
+		pad.moveRight();
+		break;
+	default:
+		break;
+	}
 }
 
 int main (int argc, char** argv) {
@@ -90,6 +121,7 @@ int main (int argc, char** argv) {
 	glutDisplayFunc(render);
 	glutIdleFunc(render);
 	glutKeyboardFunc(processKeys);
+	glutSpecialFunc(processSpecialKeys);
 	glutReshapeFunc(changeSize);
 	
 	// enter main loop
