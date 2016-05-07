@@ -87,13 +87,17 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	glLineWidth(3);
 
 	// detect collisions with bricks
-	for (int i=0; i<NUMBER_OF_BRICKS; i++)
-		if (ball.collidesBrick(brick[i].x, brick[i].y))
+	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
+		if (ball.collidesBrick(brick[i].x, brick[i].y)) {
+			ball.reflectSpeedVector();
 			brick[i].destroy();
+		}
+	}
 
 	// detect collisions with bonuses
 	for (int i=0; i<count_falling_bonuses(); i++) {
 		if (bonus[i].is_falling && ball.collidesBrick(bonus[i].x, bonus[i].y)) {
+			ball.reflectSpeedVector();
 			apply_effect(bonus.effect);
 			bonus.destroy();
 		}
@@ -101,7 +105,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 
 	// detect collisions with pad
 	if (ball.collidesPad(pad.x, pad.y)) {
-		ball.reflectSpeedVector(pad.x, pad.y);
+		ball.reflectSpeedVector();
 	}
 
 	// draw bricks
