@@ -37,12 +37,29 @@ class Ball {
 
 class Brick {
 	float x, y;
+	bool is_bonus, is_falling;
+
+	Brick(float _x, float _y, bool _is_bonus) {
+		x = _x;
+		y = _y;
+		is_bonus = _is_bonus;
+		if (is_bonus) is_falling = false;
+	}
 } bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
 // bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
 
 class Pad {
-	float x, y;
+	float x, y, movement_magnitude;
+
+	Pad(float _x, float _y, float _movement_magnitude) {
+		x = _x;
+		y = _y;
+		movement_magnitude = _movement_magnitude;
+	}
+
+	void moveLeft() { x -= movement_magnitude; }
+	void moveRight() { x += movement_magnitude; }
 } pad;
 
 
