@@ -58,6 +58,8 @@ public:
 		is_special = _is_special;
 		if (has_bonus) is_falling = false;
 	}
+
+	void draw(){ glRectf(x-3, y+1, x+3, y-1); }
 } bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
 // bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
@@ -73,6 +75,7 @@ public:
 		movement_magnitude = _movement_magnitude;
 	}
 
+	void draw() { glRectf(x-5, y, x+5, y-2); }
 	void moveLeft() { x -= movement_magnitude; }
 	void moveRight() { x += movement_magnitude; }
 } pad;
@@ -86,6 +89,7 @@ void apply_effect(string effect) {
 		pad.length *= 0.85;
 	}
 }
+
 
 void render(){ // Function to be called by openGL in every cycle of the main loop
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
