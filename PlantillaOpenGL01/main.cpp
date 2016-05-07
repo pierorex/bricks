@@ -31,7 +31,16 @@ void changeSize(int w, int h) { // callback to render nicely if the screen gets 
 
 
 class Ball {
-	float x, y;
+	float x, y, y_speed, x_speed, speed_magnitude, speed_direction;
+
+	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction) {
+		x = _x;
+		y = _y;
+		y_speed = _y_speed;
+		x_speed = _x_speed;
+		speed_magnitude = _speed_magnitude;
+		speed_direction = _speed_direction;
+	}
 } ball;
 
 
