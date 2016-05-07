@@ -31,19 +31,31 @@ void changeSize(int w, int h) { // callback to render nicely if the screen gets 
 
 
 class Ball {
-	float x, y;
+public:
+	float x, y, y_speed, x_speed, speed_magnitude, speed_direction;
+
+	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction) {
+		x = _x;
+		y = _y;
+		y_speed = _y_speed;
+		x_speed = _x_speed;
+		speed_magnitude = _speed_magnitude;
+		speed_direction = _speed_direction;
+	}
 } ball;
 
 
 class Brick {
+public:
 	float x, y;
-	bool is_bonus, is_falling; 
+	bool has_bonus, is_falling;
+	string bonus;
 
-	Brick(float _x, float _y, bool _is_bonus) {
+	Brick(float _x, float _y, bool _has_bonus) {
 		x = _x;
 		y = _y;
-		is_bonus = _is_bonus;
-		if (is_bonus) is_falling = false;
+		has_bonus = _has_bonus;
+		if (has_bonus) is_falling = false;
 	}
 
 	void draw(){ glRectf(x-3, y+1, x+3, y-1); }
@@ -52,6 +64,7 @@ class Brick {
 
 
 class Pad {
+public:
 	float x, y, movement_magnitude;
 
 	Pad(float _x, float _y, float _movement_magnitude) {
@@ -85,21 +98,29 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	glLineWidth(3);
 
 	// detect collisions with bricks
-	for (int i=0; i<NUMBER_OF_BRICKS; i++)
-		if (ball.collidesBrick(brick[i].x, brick[i].y))
+	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
+		if (ball.collidesBrick(brick[i].x, brick[i].y)) {
+			ball.reflectSpeedVector();
 			brick[i].destroy();
+		}
+	}
 
 	// detect collisions with bonuses
-	for (int i=0; i<count_falling_bonuses(); i++) {
-		if (bonus[i].is_falling && ball.collidesBrick(bonus[i].x, bonus[i].y)) {
-			apply_effect(bonus.effect);
-			bonus.destroy();
+	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
+		if (bricks[i].is_falling) {
+			bricks[i].moveDown();
+
+			if (ball.collidesBrick(bricks[i].x, bricks[i].y)) {
+				ball.reflectSpeedVector();
+				apply_effect(bricks[i].effect);
+				bricks[i].destroyBonus();
+			}
 		}
 	}
 
 	// detect collisions with pad
 	if (ball.collidesPad(pad.x, pad.y)) {
-		ball.reflectSpeedVector(pad.x, pad.y);
+		ball.reflectSpeedVector();
 	}
 
 	// draw bricks
@@ -114,10 +135,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 }
 
 void processKeys(unsigned char key, int x, int y) {
-	float magnitude = 10.0f;  // pad traslation magnitude
-
 	if (key == 27) exit(0);
-	
 }
 
 void processSpecialKeys(int key, int x, int y) {
