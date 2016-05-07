@@ -31,6 +31,7 @@ void changeSize(int w, int h) { // callback to render nicely if the screen gets 
 
 
 class Ball {
+public:
 	float x, y, y_speed, x_speed, speed_magnitude, speed_direction;
 
 	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction) {
@@ -45,20 +46,23 @@ class Ball {
 
 
 class Brick {
+public:
 	float x, y;
-	bool is_bonus, is_falling;
+	bool has_bonus, is_falling;
+	string bonus;
 
-	Brick(float _x, float _y, bool _is_bonus) {
+	Brick(float _x, float _y, bool _has_bonus) {
 		x = _x;
 		y = _y;
-		is_bonus = _is_bonus;
-		if (is_bonus) is_falling = false;
+		has_bonus = _has_bonus;
+		if (has_bonus) is_falling = false;
 	}
 } bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
 // bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
 
 class Pad {
+public:
 	float x, y, movement_magnitude;
 
 	Pad(float _x, float _y, float _movement_magnitude) {
@@ -95,11 +99,15 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	}
 
 	// detect collisions with bonuses
-	for (int i=0; i<count_falling_bonuses(); i++) {
-		if (bonus[i].is_falling && ball.collidesBrick(bonus[i].x, bonus[i].y)) {
-			ball.reflectSpeedVector();
-			apply_effect(bonus.effect);
-			bonus.destroy();
+	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
+		if (bricks[i].is_falling) {
+			bricks[i].moveDown();
+
+			if (ball.collidesBrick(bricks[i].x, bricks[i].y)) {
+				ball.reflectSpeedVector();
+				apply_effect(bricks[i].effect);
+				bricks[i].destroyBonus();
+			}
 		}
 	}
 
@@ -120,10 +128,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 }
 
 void processKeys(unsigned char key, int x, int y) {
-	float magnitude = 10.0f;  // pad traslation magnitude
-
 	if (key == 27) exit(0);
-	
 }
 
 void processSpecialKeys(int key, int x, int y) {
