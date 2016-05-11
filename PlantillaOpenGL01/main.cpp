@@ -68,13 +68,14 @@ public:
 class Brick {
 public:
 	float x, y;
-	bool has_bonus, is_falling;
-	string bonus;
+	bool has_bonus, is_falling, is_special;
+	string effect;
 
-	Brick(float _x, float _y, bool _has_bonus) {
+	Brick(float _x, float _y, bool _has_bonus, bool _is_special) {
 		x = _x;
 		y = _y;
 		has_bonus = _has_bonus;
+		is_special = _is_special;
 		if (has_bonus) is_falling = false;
 	}
 
@@ -92,11 +93,12 @@ public:
 
 class Pad {
 public:
-	float x, y, movement_magnitude;
+	float x, y, length, movement_magnitude;
 
-	Pad(float _x, float _y, float _movement_magnitude) {
+	Pad(float _x, float _y, float _length, float _movement_magnitude) {
 		x = _x;
 		y = _y;
+		length = _length;
 		movement_magnitude = _movement_magnitude;
 	}
 
@@ -104,6 +106,15 @@ public:
 	void moveLeft() { x -= movement_magnitude; }
 	void moveRight() { x += movement_magnitude; }
 } pad;
+
+void apply_effect(string effect) {
+	if (effect.compare(string("ball_speed_up")) == 0) {
+		ball.speed_magnitude *= 1.4;
+	}
+	if (effect.compare(string("pad_shrink")) == 0) {
+		pad.length *= 0.85;
+	}
+}
 
 void render(){ // Function to be called by openGL in every cycle of the main loop
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
