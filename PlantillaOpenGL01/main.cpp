@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <GL\freeglut.h>
 
 using namespace std;
@@ -60,7 +61,7 @@ public:
 	}
 
 	void draw(){ glRectf(x-3, y+1, x+3, y-1); }
-} bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
+};
 // bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
 
@@ -105,21 +106,23 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	// configurations
 	glLineWidth(3);
 
+	vector<Brick> bricks;
+
 	// detect collisions with walls
 	for (int i=0; i<walls.size(); i++) {
 		if (ball.collidesWall(wall)) ball.reflectSpeedVector();
 	}
 
 	// detect collisions with bricks
-	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
-		if (ball.collidesBrick(brick[i].x, brick[i].y)) {
+	for (int i=0; i<bricks.size(); i++) {
+		if (ball.collidesBrick(bricks[i].x, bricks[i].y)) {
 			ball.reflectSpeedVector();
-			brick[i].destroy();
+			bricks[i].destroy();
 		}
 	}
 	
 	// detect collisions with bonuses
-	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
+	for (int i=0; i<bricks.size(); i++) {
 		if (bricks[i].is_falling) {
 			bricks[i].moveDown();
 
@@ -137,7 +140,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	}
 
 	// draw bricks
-	for (int i=0; i<NUMBER_OF_BRICKS; i++)
+	for (int i=0; i<bricks.size(); i++)
 		bricks[i].draw();
 
 	// draw pad
