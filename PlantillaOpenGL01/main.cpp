@@ -4,8 +4,9 @@
 
 using namespace std;
 
-const int NUMBER_OF_BRICKS = 7*5;
-
+const int NUMBER_COLUMNS_BRICKS = 7;
+const int NUMBER_ROWS_BRICKS = 5;
+const int NUMBER_OF_BRICKS = NUMBER_COLUMNS_BRICKS * NUMBER_ROWS_BRICKS;
 
 void changeSize(int w, int h) { // callback to render nicely if the screen gets resized by the user
 	// Prevent a divide by zero, when window is too short
@@ -106,6 +107,10 @@ void apply_effect(string effect) {
 }
 
 
+vector<Brick> bricks;
+vector<Wall> walls;
+
+
 void render(){ // Function to be called by openGL in every cycle of the main loop
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -119,9 +124,6 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 
 	// configurations
 	glLineWidth(3);
-
-	vector<Brick> bricks;
-	vector<Wall> walls;
 
 	// detect collisions with walls
 	for (int i=0; i<walls.size(); i++) {
@@ -167,6 +169,17 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	glutSwapBuffers();
 }
 
+void init_board() {
+	for (int i=0; i<NUMBER_ROWS_BRICKS; i++) {
+		for (int j=0; j<NUMBER_COLUMNS_BRICKS; j++)
+			bricks.push_back(Brick());
+	}
+
+	walls.push_back(Wall());
+	walls.push_back(Wall());
+	walls.push_back(Wall());
+}
+
 void processKeys(unsigned char key, int x, int y) {
 	if (key == 27) exit(0);
 }
@@ -199,6 +212,9 @@ int main (int argc, char** argv) {
 	glutSpecialFunc(processSpecialKeys);
 	glutReshapeFunc(changeSize);
 	
+	// initialize game board
+	init_board();
+
 	// enter main loop
 	glutMainLoop();
 	return 1;
