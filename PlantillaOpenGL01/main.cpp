@@ -62,7 +62,6 @@ public:
 
 	void draw(){ glRectf(x-3, y+1, x+3, y-1); }
 };
-// bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
 
 class Pad {
@@ -80,6 +79,21 @@ public:
 	void moveLeft() { x -= movement_magnitude; }
 	void moveRight() { x += movement_magnitude; }
 } pad;
+
+
+class Wall {
+public:
+	float x1, y1, x2, y2;
+
+	Wall(float _x1, float _y1, float _x2, float _y2) {
+		x1 = _x1;
+		y1 = _y1;
+		x2 = _x2;
+		y2 = _y2;
+	}
+
+	void draw() { }
+};
 
 
 void apply_effect(string effect) {
@@ -107,6 +121,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	glLineWidth(3);
 
 	vector<Brick> bricks;
+	vector<Wall> walls;
 
 	// detect collisions with walls
 	for (int i=0; i<walls.size(); i++) {
@@ -140,8 +155,10 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	}
 
 	// draw bricks
-	for (int i=0; i<bricks.size(); i++)
-		bricks[i].draw();
+	for (int i=0; i<bricks.size(); i++) bricks[i].draw();
+
+	// draw walls
+	for (int i=0; i<walls.size(); i++) walls[i].draw();
 
 	// draw pad
 
