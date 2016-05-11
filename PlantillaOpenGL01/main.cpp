@@ -105,6 +105,11 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	// configurations
 	glLineWidth(3);
 
+	// detect collisions with walls
+	for (int i=0; i<walls.size(); i++) {
+		if (ball.collidesWall(wall)) ball.reflectSpeedVector();
+	}
+
 	// detect collisions with bricks
 	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
 		if (ball.collidesBrick(brick[i].x, brick[i].y)) {
@@ -112,7 +117,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 			brick[i].destroy();
 		}
 	}
-
+	
 	// detect collisions with bonuses
 	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
 		if (bricks[i].is_falling) {
