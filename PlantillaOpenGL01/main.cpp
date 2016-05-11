@@ -29,19 +29,39 @@ void changeSize(int w, int h) { // callback to render nicely if the screen gets 
 	glMatrixMode(GL_MODELVIEW);
 }
 
+void drawCircle(GLfloat x, GLfloat y, GLfloat radius){
+	int i;
+	int lineAmount = 100;
+	GLfloat twicePi = 2.0f * 3.1416;
+	glBegin(GL_LINE_LOOP);
+		for(i = 0; i <= lineAmount;i++) { 
+			glVertex2f(
+			    x + (radius * cos(i *  twicePi / lineAmount)), 
+			    y + (radius* sin(i * twicePi / lineAmount))
+			);
+		}
+	glEnd();
+}
 
 class Ball {
 public:
-	float x, y, y_speed, x_speed, speed_magnitude, speed_direction;
+	float x, y, y_speed, x_speed, speed_magnitude, speed_direction, ratio;
 
-	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction) {
+	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction, float _ratio) {
 		x = _x;
 		y = _y;
+		ratio = _ratio;
 		y_speed = _y_speed;
 		x_speed = _x_speed;
 		speed_magnitude = _speed_magnitude;
 		speed_direction = _speed_direction;
 	}
+
+	void draw(){
+		glTranslated();
+		drawCircle(x, y, ratio);
+	}
+
 } ball;
 
 
@@ -58,7 +78,14 @@ public:
 		if (has_bonus) is_falling = false;
 	}
 
-	void draw(){ glRectf(x-3, y+1, x+3, y-1); }
+	void draw(){
+		glRectf(x-3, y+1, x+3, y-1); 
+	
+	}
+	void bonus(){ 
+		glRectf(x-2, y+1, x+2, y-1);
+	}
+
 } bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
 // bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
@@ -77,11 +104,6 @@ public:
 	void moveLeft() { x -= movement_magnitude; }
 	void moveRight() { x += movement_magnitude; }
 } pad;
-
-
-void drawBonus(float x, float y){ // Position of the brick when show the bonus
-}
-
 
 void render(){ // Function to be called by openGL in every cycle of the main loop
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -128,8 +150,10 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 		bricks[i].draw();
 
 	// draw pad
+	pad.draw();
 
 	// draw ball
+	ball.draw();
 
 	glutSwapBuffers();
 }
