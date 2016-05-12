@@ -43,6 +43,31 @@ void drawCircle(GLfloat x, GLfloat y, GLfloat radius){
 	glEnd();
 }
 
+void collisionLine(float xBrick, float yBrick, float xball, float yball, float ratio){
+	// Collision in Y+
+	if (y+1 == yball-ratio && xBrick+3 <= xball && xBrick-3 >= xball) return true;
+	// Collision in Y-
+	if (y-1 == yball+ratio && xBrick+3 <= xball && xBrick-3 >= xball) return true;
+	// Collision in X+
+	if (x+3 == xball-ratio && yBrick+1 <= yball && yBrick-1 >= yball) return true;
+	// Collision in X-
+	if (x-3 == xball+ratio && yBrick+1 <= yball && yBrick-1 >= yball) return true;
+	return false;
+}
+
+void collisionCircle(float xBrick, float yBrick, float xball, float yball, float ratio){
+	float x1 = (xBrick+3-xball)*(xBrick+3-xball);
+	float x2 = (xBrick-3-xball)*(xBrick-3-xball);
+	float y1 = (ybrick+1-yball)*(ybrick+1-yball);
+	float y2 = (ybrick-1-yball)*(ybrick-1-yball);
+	float r = ratio * ratio;
+	if(x1 + y1 == r) return true;
+	if(x1 + y2 == r) return true;
+	if(x2 + y1 == r) return true;
+	if(x1 + y2 == r) return true;
+	return false;
+}
+
 class Ball {
 public:
 	float x, y, y_speed, x_speed, speed_magnitude, speed_direction, ratio;
@@ -62,6 +87,17 @@ public:
 		drawCircle(x, y, ratio);
 	}
 
+	void collidesBrick(float xBrick, float yBrick){
+		// Collision in rect
+		if (collisionLine(xBrick, yBrick, x, y, ratio)){
+			return true;
+		}
+		// Collision Vertex
+		if (collisionCircle(xBrick, yBrick, x, y, ratio)) {
+			return true;
+		}
+		return false;
+	}
 } ball;
 
 
@@ -107,6 +143,8 @@ public:
 	void moveRight() { x += movement_magnitude; }
 } pad;
 
+
+
 void apply_effect(string effect) {
 	if (effect.compare(string("ball_speed_up")) == 0) {
 		ball.speed_magnitude *= 1.4;
@@ -132,7 +170,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 
 	// detect collisions with bricks
 	for (int i=0; i<NUMBER_OF_BRICKS; i++) {
-		if (ball.collidesBrick(brick[i].x, brick[i].y)) {
+		if (ball.collidesBrick(bricks[i].x, bricks[i].y)) {
 			ball.reflectSpeedVector();
 			brick[i].destroy();
 		}
