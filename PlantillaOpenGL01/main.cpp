@@ -31,18 +31,74 @@ void changeSize(int w, int h) { // callback to render nicely if the screen gets 
 	glMatrixMode(GL_MODELVIEW);
 }
 
+void drawCircle(GLfloat x, GLfloat y, GLfloat radius){
+	int i;
+	int lineAmount = 100;
+	GLfloat twicePi = 2.0f * 3.1416;
+	glBegin(GL_LINE_LOOP);
+		for(i = 0; i <= lineAmount;i++) {
+			glVertex2f(
+			    x + (radius * cos(i *  twicePi / lineAmount)),
+			    y + (radius* sin(i * twicePi / lineAmount))
+			);
+		}
+	glEnd();
+}
+
+void collisionLine(float xBrick, float yBrick, float xball, float yball, float ratio){
+	// Collision in Y+
+	if (y+1 == yball-ratio && xBrick+3 <= xball && xBrick-3 >= xball) return true;
+	// Collision in Y-
+	if (y-1 == yball+ratio && xBrick+3 <= xball && xBrick-3 >= xball) return true;
+	// Collision in X+
+	if (x+3 == xball-ratio && yBrick+1 <= yball && yBrick-1 >= yball) return true;
+	// Collision in X-
+	if (x-3 == xball+ratio && yBrick+1 <= yball && yBrick-1 >= yball) return true;
+	return false;
+}
+
+void collisionCircle(float xBrick, float yBrick, float xball, float yball, float ratio){
+	float x1 = (xBrick+3-xball)*(xBrick+3-xball);
+	float x2 = (xBrick-3-xball)*(xBrick-3-xball);
+	float y1 = (ybrick+1-yball)*(ybrick+1-yball);
+	float y2 = (ybrick-1-yball)*(ybrick-1-yball);
+	float r = ratio * ratio;
+	if(x1 + y1 == r) return true;
+	if(x1 + y2 == r) return true;
+	if(x2 + y1 == r) return true;
+	if(x1 + y2 == r) return true;
+	return false;
+}
 
 class Ball {
 public:
-	float x, y, y_speed, x_speed, speed_magnitude, speed_direction;
+	float x, y, y_speed, x_speed, speed_magnitude, speed_direction, ratio;
 
-	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction) {
+	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction, float _ratio) {
 		x = _x;
 		y = _y;
+		ratio = _ratio;
 		y_speed = _y_speed;
 		x_speed = _x_speed;
 		speed_magnitude = _speed_magnitude;
 		speed_direction = _speed_direction;
+	}
+
+	void draw(){
+		glTranslated();
+		drawCircle(x, y, ratio);
+	}
+
+	void collidesBrick(float xBrick, float yBrick){
+		// Collision in rect
+		if (collisionLine(xBrick, yBrick, x, y, ratio)){
+			return true;
+		}
+		// Collision Vertex
+		if (collisionCircle(xBrick, yBrick, x, y, ratio)) {
+			return true;
+		}
+		return false;
 	}
 } ball;
 
@@ -61,8 +117,16 @@ public:
 		if (has_bonus) is_falling = false;
 	}
 
-	void draw(){ glRectf(x-3, y+1, x+3, y-1); }
-};
+	void draw(){
+		glRectf(x-3, y+1, x+3, y-1);
+
+	}
+	void bonus(){
+		glRectf(x-2, y+1, x+2, y-1);
+	}
+
+} bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
+// bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
 
 class Pad {
@@ -137,7 +201,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 			bricks[i].destroy();
 		}
 	}
-	
+
 	// detect collisions with bonuses
 	for (int i=0; i<bricks.size(); i++) {
 		if (bricks[i].is_falling) {
@@ -163,8 +227,10 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	for (int i=0; i<walls.size(); i++) walls[i].draw();
 
 	// draw pad
+	pad.draw();
 
 	// draw ball
+	ball.draw();
 
 	glutSwapBuffers();
 }
