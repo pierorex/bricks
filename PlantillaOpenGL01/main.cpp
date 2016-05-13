@@ -134,8 +134,8 @@ public:
 		// Corner
 		if (collisionPoint == 3) {
 			float aux = y_speed;
-			y_speed = x_speed;
-			x_speed = aux;
+			y_speed = x_speed*(-1);
+			x_speed = aux*(-1);
 		}
 	}
 
