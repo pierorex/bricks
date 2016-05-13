@@ -125,8 +125,7 @@ public:
 		glRectf(x-2, y+1, x+2, y-1);
 	}
 
-} bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
-// bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
+};
 
 
 class Pad {
@@ -217,7 +216,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 
 	// detect collisions with pad
 	if (ball.collidesPad(pad.x, pad.y)) {
-		ball.reflectSpeedVector();
+        ball.reflectSpeedVector();
 	}
 
 	// draw bricks
