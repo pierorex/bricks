@@ -186,7 +186,7 @@ public:
 		if (is_falling) {
 			// draw as falling bonus
 			glColor3f(0.0, 0.0, 1.0);
-			glRectf(x-3, y+1, x+3, y-1);
+			glRectf(x-1, y+1, x+1, y-1);
 		}
 		else if (is_special && times == 1){
 			// draw as special brick that is almost broken
@@ -233,7 +233,8 @@ public:
 		y -= falling_magnitude;
 	}
 
-	void destroyBonus(){	
+	void destroyBonus() {
+		is_falling = false;
 	}
 }; 
 
@@ -262,6 +263,10 @@ public:
 	void moveRight() {
 		if (x + length <= 41.0f)
 			x += movement_magnitude;
+	}
+
+	int collidesBonus(float xBonus, float yBonus) {
+		return collisionLine(xBonus, yBonus, x, y, 1, 1, 1);
 	}
 } pad(0.0, 0.0, 10.0, 1.0);
 
@@ -339,9 +344,8 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	for (int i=0; i<bricks.size(); i++) {
 		if (bricks[i].is_falling) {
 			bricks[i].moveDown();
-			aux = ball.collidesBrick(bricks[i].x, bricks[i].y);
+			aux = pad.collidesBonus(bricks[i].x, bricks[i].y);
 			if (aux != 0){
-				ball.reflectSpeedVector(aux);
 				apply_effect(bricks[i].effect);
 				bricks[i].destroyBonus();
 			}
