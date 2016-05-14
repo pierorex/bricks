@@ -46,7 +46,7 @@ void drawCircle(GLfloat x, GLfloat y, GLfloat radius){
 	glEnd();
 }
 
-void collisionLine(float xBrick, float yBrick, float xball, float yball, float ratio, float longy, float width){
+int collisionLine(float xBrick, float yBrick, float xball, float yball, float ratio, float longy, float width){
 	// Collision in Y+
 	if (yBrick+longy == yball-ratio && xBrick+width >= xball && xBrick-width <= xball) return 1;
 	// Collision in Y-
@@ -58,11 +58,11 @@ void collisionLine(float xBrick, float yBrick, float xball, float yball, float r
 	return 0;
 }
 
-void collisionCircle(float xBrick, float yBrick, float xball, float yball, float ratio, float longy, float width){
+int collisionCircle(float xBrick, float yBrick, float xball, float yball, float ratio, float longy, float width){
 	float x1 = (xBrick+width-xball)*(xBrick+width-xball);
 	float x2 = (xBrick-width-xball)*(xBrick-width-xball);
-	float y1 = (ybrick+longy-yball)*(ybrick+longy-yball);
-	float y2 = (ybrick-longy-yball)*(ybrick-longy-yball);
+	float y1 = (yBrick+longy-yball)*(yBrick+longy-yball);
+	float y2 = (yBrick-longy-yball)*(yBrick-longy-yball);
 	float r = ratio * ratio;
 	if((x1 + y1) == r || (x1 + y2) == r || (x2 + y1) == r || (x1 + y2) == r) return 3;
 	return 0;
@@ -83,7 +83,6 @@ public:
 	}
 
 	void draw(){
-		glTranslated();
 		drawCircle(x, y, ratio);
 	}
 
@@ -101,15 +100,15 @@ public:
 		return 0;
 	}
 
-	int collidesWall(Wall wall){
+	int collidesWall(float x1, float y1, float x2, float y2){
 		// Collision in Y+
-		if (wall.y1 == y-ratio && wall.x1 <= x && wall.x2 >= x) return 1;
+		if (y1 == (y-ratio) && x1 <= x && x2 >= x) return 1;
 		// Collision in Y-
-		if (wall.y2 == y+ratio && wall.x1 <= x && wall.x2 >= x) return 1;
+		if (y2 == y+ratio && x1 <= x && x2 >= x) return 1;
 		// Collision in X+
-		if (wall.x1 == x+ratio && wall.y1 >= y && wall.y2 <= y) return 2;
+		if (x1 == x+ratio && y1 >= y && y2 <= y) return 2;
 		// Collision in X-
-		if (wall.x2 == x-ratio && wall.y1 >= y && wall.y2 <= y) return 2;
+		if (x2 == x-ratio && y1 >= y && y2 <= y) return 2;
 		return 0;
 	}
 
@@ -139,7 +138,7 @@ public:
 		}
 	}
 
-} ball;
+} ball(0.0, 3.0, 3.0, 3.0, 5.0, 5.0, 1.5);
 
 
 class Brick {
@@ -153,7 +152,7 @@ public:
 		y = _y;
 		has_bonus = _has_bonus;
 		is_special = _is_special;
-		times = _times
+		times = _times;
 		if (has_bonus) is_falling = false;
 	}
 
@@ -199,7 +198,14 @@ public:
 	
 	}
 
-} bricks[NUMBER_OF_BRICKS], bonus[NUMBER_OF_BRICKS];
+	void moveDown(){
+	
+	}
+
+	void destroyBonus(){
+	
+	}
+}; 
 // bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
 
@@ -214,10 +220,15 @@ public:
 		movement_magnitude = _movement_magnitude;
 	}
 
-	void draw() { glRectf(x -(length div 2), y+1, x+(length div 2), y-1); }
+	void draw() { 
+		float x1 = x-(length/2); 
+		float x2 = x+(length/2);
+		glRectf(x1, y+1.0, x2, y-1.0); 
+	
+	}
 	void moveLeft() { x -= movement_magnitude; }
 	void moveRight() { x += movement_magnitude; }
-} pad;
+} pad(0.0, 0.0, 6.0, 2.0);
 
 
 class Wall {
@@ -231,7 +242,7 @@ public:
 		y2 = _y2;
 	}
 
-	void draw() { glRectf(x1, y1, x2, y2) }
+	void draw() { glRectf(x1, y1, x2, y2); }
 };
 
 
@@ -266,14 +277,14 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	int aux = 0;
 	// detect collisions with walls
 	for (int i=0; i<walls.size(); i++) {
-		aux = ball.collidesWall(walls[i]);
+		aux = ball.collidesWall(walls[i].x1, walls[i].y1, walls[i].x2, walls[i].y2);
 		if (aux != 0) ball.reflectSpeedVector(aux);
 	}
 
 	// detect collisions with bricks
 	for (int i=0; i<bricks.size(); i++) {
 		aux = ball.collidesBrick(bricks[i].x, bricks[i].y);
-		if (a != 0) {
+		if (aux != 0) {
 			ball.reflectSpeedVector(aux);
 			if (bricks[i].times == 1.0) bricks[i].destroy();
 			if (bricks[i].times == 2.0) bricks[i].times = 1.0; 
