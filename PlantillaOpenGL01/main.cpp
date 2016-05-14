@@ -184,7 +184,7 @@ public:
 		if (times == 0 && !is_falling) return;
 		if (is_falling) {
 			// draw as falling bonus
-			glColor3f(0.0, 0.0, 1.0);
+			glColor3f(1.0f + effect*1.0f, effect*1.0f, effect*1.0f);
 			glRectf(x-1, y+1, x+1, y-1);
 		}
 		else if (is_special && times == 1){
