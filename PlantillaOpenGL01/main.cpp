@@ -156,6 +156,11 @@ public:
 		}
 	}
 
+	void updatePosition() {
+		x += x_speed * speed_magnitude;
+		y += y_speed * speed_magnitude;
+	}
+
 } ball(0.1, 4.0, -0.001, 0.001, 10.0, 1.5);
 
 
@@ -308,8 +313,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	glLineWidth(3);
 
 	// update ball position
-	ball.x += ball.x_speed * ball.speed_magnitude;
-	ball.y += ball.y_speed * ball.speed_magnitude;
+	ball.updatePosition();
 
 	int aux = 0;
 	// detect collisions with walls
@@ -331,7 +335,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 		}
 	}
 
-	// detect collisions with bonuses
+	// update bonuses positions and detect collisions between them and the pad
 	for (int i=0; i<bricks.size(); i++) {
 		if (bricks[i].is_falling) {
 			bricks[i].moveDown();
