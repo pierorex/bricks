@@ -161,7 +161,7 @@ public:
 
 class Brick {
 public:
-	float x, y;
+	float x, y, falling_magnitude;
 	int times;
 	bool has_bonus, is_falling, is_special;
 	string effect;
@@ -173,11 +173,18 @@ public:
 		is_special = false;
 		times = 1;
 		is_falling = false;
+		falling_magnitude = 0.01f;
 	}
 
 	void draw(){
-		if (times == 0) return;
-		if (is_special && times == 1){
+		if (times == 0 && !is_falling) return;
+		if (is_falling) {
+			// draw as falling bonus
+			glColor3f(0.0, 0.0, 1.0);
+			glRectf(x-3, y+1, x+3, y-1);
+		}
+		else if (is_special && times == 1){
+			// draw as special brick that is almost broken
 			glColor3f(0.0, 0.0, 1.0);
 			glRectf(x-3, y+1, x+3, y-1);
 			glLineWidth(1.5); 
@@ -205,6 +212,7 @@ public:
 				glVertex3f(x+0.7, y-1, 0.0);
 			glEnd();
 		} else {
+			// draw as normal or intact special brick
 			glColor3f(0.0, 0.0, 1.0);
 			if (is_special) glColor3f(0.0, 1.0, 0.0);
 			glRectf(x-3, y+1, x+3, y-1);
@@ -217,6 +225,7 @@ public:
 	}
 
 	void moveDown(){
+		y -= falling_magnitude;
 	}
 
 	void destroyBonus(){	
@@ -317,6 +326,8 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 		if (aux != 0) {
 			ball.reflectSpeedVector(aux);
 			bricks[i].times--;
+			if (bricks[i].has_bonus && bricks[i].times == 0)
+				bricks[i].is_falling = true;
 		}
 	}
 
