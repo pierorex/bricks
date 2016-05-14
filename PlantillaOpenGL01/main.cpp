@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
-#include <stdlib.h>
+#include <stdio.h>      /* NULL */
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 #include <GL\freeglut.h>
 
 using namespace std;
@@ -8,6 +10,7 @@ using namespace std;
 const int NUMBER_COLUMNS_BRICKS = 7;
 const int NUMBER_ROWS_BRICKS = 5;
 const int NUMBER_OF_BRICKS = NUMBER_COLUMNS_BRICKS * NUMBER_ROWS_BRICKS;
+const float eps = 0.1f;
 
 void changeSize(int w, int h) { // callback to render nicely if the screen gets resized by the user
 	// Prevent a divide by zero, when window is too short
@@ -46,54 +49,68 @@ void drawCircle(GLfloat x, GLfloat y, GLfloat radius){
 	glEnd();
 }
 
-int collisionLine(float xBrick, float yBrick, float xball, float yball, float ratio, float longy, float width){
+int collisionLine(float xBrick, float yBrick, float xball, float yball, float radius, float height, float width){
+	
+	float x1, y1, x2, y2, x, y;
+	x = xball; y = yball; 
+	x1 = xBrick - width; 
+	x2 = xBrick + width;
+	y1 = yBrick + height; 
+	y2 = yBrick - height;
 	// Collision in Y+
-	if (yBrick+longy == yball-ratio && xBrick+width >= xball && xBrick-width <= xball) return 1;
+	float aux = y1 - (y-radius);
+	if ( aux >= 0 && aux <= eps && x1 <= x && x2 >= x) return 1;
 	// Collision in Y-
-	if (yBrick-longy == yball+ratio && xBrick+width >= xball && xBrick-width <= xball) return 1;
+	aux = y2 - (y+radius);
+	if ( aux >= 0 && aux <= eps && x1 <= x && x2 >= x) return 1;
 	// Collision in X+
-	if (xBrick+width == xball-ratio && yBrick+longy >= yball && yBrick-longy <= yball) return 2;
+	aux = x1 - (x+radius);
+	if (aux >= 0 && aux <= eps && y1 >= y && y2 <= y) return 2;
 	// Collision in X-
-	if (xBrick-width == xball+ratio && yBrick+longy >= yball && yBrick-longy <= yball) return 2;
+	aux = x2 - (x-radius);
+	if (aux >= 0 && aux <= eps && y1 >= y && y2 <= y) return 2;
 	return 0;
+
 }
 
-int collisionCircle(float xBrick, float yBrick, float xball, float yball, float ratio, float longy, float width){
-	float x1 = (xBrick+width-xball)*(xBrick+width-xball);
-	float x2 = (xBrick-width-xball)*(xBrick-width-xball);
-	float y1 = (yBrick+longy-yball)*(yBrick+longy-yball);
-	float y2 = (yBrick-longy-yball)*(yBrick-longy-yball);
-	float r = ratio * ratio;
-	if((x1 + y1) == r || (x1 + y2) == r || (x2 + y1) == r || (x1 + y2) == r) return 3;
+int collisionCircle(float xBrick, float yBrick, float xball, float yball, float radius, float height, float width){
+
+	float x1 = xBrick - width - xball;
+	float x2 = xBrick + width - xball;
+	float y1 = yBrick + height - yball;
+	float y2 = yBrick - height - yball;
+	float r = radius * radius;
+
+	if (x1*x1 + y1*y1 <= r || x1*x1 + y2*y2 <= r || x2*x2 + y1*y1 <= r || x2*x2 + y2*y2 <= r) return 3;
 	return 0;
 }
 
 class Ball {
 public:
-	float x, y, y_speed, x_speed, speed_magnitude, speed_direction, ratio;
+	float x, y, y_speed, x_speed, speed_magnitude, radius;
 
-	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _speed_direction, float _ratio) {
+	Ball(float _x, float _y, float _y_speed, float _x_speed, float _speed_magnitude, float _radius) {
 		x = _x;
 		y = _y;
-		ratio = _ratio;
+		radius = _radius;
 		y_speed = _y_speed;
 		x_speed = _x_speed;
 		speed_magnitude = _speed_magnitude;
-		speed_direction = _speed_direction;
 	}
 
 	void draw(){
-		drawCircle(x, y, ratio);
+		glColor3f(0.0f, 0.0f, 1.0f);
+		drawCircle(x, y, radius);
 	}
 
 	int collidesBrick(float xBrick, float yBrick){
 		// Collision in rect
-		int a = collisionLine(xBrick, yBrick, x, y, ratio, 1, 3);
+		int a = collisionLine(xBrick, yBrick, x, y, radius, 1, 3);
 		if (a != 0){
 			return a;
 		}
 		// Collision Corner
-		a = collisionCircle(xBrick, yBrick, x, y, ratio, 1, 3);
+		a = collisionCircle(xBrick, yBrick, x, y, radius, 1, 3);
 		if (a != 0) {
 			return a;
 		}
@@ -102,34 +119,35 @@ public:
 
 	int collidesWall(float x1, float y1, float x2, float y2){
 		// Collision in Y+
-		if (y1 == (y-ratio) && x1 <= x && x2 >= x) return 1;
+		float aux = y1 - (y-radius);
+		if ( aux >= 0 && aux <= eps && x1 <= x && x2 >= x) return 1;
 		// Collision in Y-
-		if (y2 == y+ratio && x1 <= x && x2 >= x) return 1;
+		aux = y2 - (y+radius);
+		if ( aux >= 0 && aux <= eps && x1 <= x && x2 >= x) return 1;
 		// Collision in X+
-		if (x1 == x+ratio && y1 >= y && y2 <= y) return 2;
+		aux = x1 - (x+radius);
+		if (aux >= 0 && aux <= eps && y1 >= y && y2 <= y) return 2;
 		// Collision in X-
-		if (x2 == x-ratio && y1 >= y && y2 <= y) return 2;
+		aux = x2 - (x-radius);
+		if (aux >= 0 && aux <= eps && y1 >= y && y2 <= y) return 2;
 		return 0;
 	}
 
 	int collidesPad(float xPad, float yPad, float len){
 		// Collision in rect
-		int a = collisionLine(xPad, yPad, x, y, ratio, 1, len); 
+		int a = collisionLine(xPad, yPad, x, y, radius, 1, len/2); 
 		if (a != 0){
 			return a;
+		} else {
+			// Collision Vertex
+			return 0;//collisionCircle(xPad, yPad, x, y, radius, 1, len/2);
 		}
-		// Collision Vertex
-		a = collisionCircle(xPad, yPad, x, y, ratio, 1, len);
-		if (a != 0) {
-			return a;
-		}
-		return 0;
 	}
 
 	void reflectSpeedVector(int collisionPoint){
 		// Line
-		if (collisionPoint == 1) y_speed = y_speed*(-1);
-		if (collisionPoint == 2) x_speed = x_speed*(-1);
+		if (collisionPoint == 1) y_speed *= -1;
+		if (collisionPoint == 2) x_speed *= -1;
 		// Corner
 		if (collisionPoint == 3) {
 			float aux = y_speed;
@@ -138,26 +156,29 @@ public:
 		}
 	}
 
-} ball(0.0, 3.0, 3.0, 3.0, 5.0, 5.0, 1.5);
+} ball(0.1, 4.0, -0.001, 0.001, 10.0, 1.5);
 
 
 class Brick {
 public:
-	float x, y, times;
+	float x, y;
+	int times;
 	bool has_bonus, is_falling, is_special;
 	string effect;
 
-	Brick(float _x, float _y, bool _has_bonus, bool _is_special, float _times){
+	Brick(float _x, float _y){
 		x = _x;
 		y = _y;
-		has_bonus = _has_bonus;
-		is_special = _is_special;
-		times = _times;
-		if (has_bonus) is_falling = false;
+		has_bonus = false;
+		is_special = false;
+		times = 1;
+		is_falling = false;
 	}
 
 	void draw(){
-		if (is_special && times == 1.0){
+		if (times == 0) return;
+		if (is_special && times == 1){
+			glColor3f(0.0, 0.0, 1.0);
 			glRectf(x-3, y+1, x+3, y-1);
 			glLineWidth(1.5); 
 			glColor3f(1.0, 0.0, 0.0);
@@ -187,6 +208,7 @@ public:
 			glColor3f(0.0, 0.0, 1.0);
 			if (is_special) glColor3f(0.0, 1.0, 0.0);
 			glRectf(x-3, y+1, x+3, y-1);
+			glColor3f(0.0, 0.0, 1.0);
 		}
 	}
 
@@ -194,19 +216,12 @@ public:
 		glRectf(x-2, y+1, x+2, y-1);
 	}
 
-	void destroy(){
-	
-	}
-
 	void moveDown(){
-	
 	}
 
-	void destroyBonus(){
-	
+	void destroyBonus(){	
 	}
 }; 
-// bricks move from the 'brick' array to the 'bonus' array if they contained a bonus
 
 
 class Pad {
@@ -228,7 +243,7 @@ public:
 	}
 	void moveLeft() { x -= movement_magnitude; }
 	void moveRight() { x += movement_magnitude; }
-} pad(0.0, 0.0, 6.0, 2.0);
+} pad(0.0, 0.0, 10.0, 1.0);
 
 
 class Wall {
@@ -242,7 +257,10 @@ public:
 		y2 = _y2;
 	}
 
-	void draw() { glRectf(x1, y1, x2, y2); }
+	void draw() {
+		glColor3f(0.0f, 0.0f, 1.0f);
+		glRectf(x1, y1, x2, y2); 
+	}
 };
 
 
@@ -267,27 +285,32 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	glLoadIdentity();
 
 	// set camera
-	gluLookAt(0.0f, 0.0f, 30.0f, // camera position
-			  0.0f, 0.0f, 0.0f,  // look at this point
+	gluLookAt(0.0f, 25.0f, 80.0f, // camera position
+			  0.0f, 25.0f, 0.0f,  // look at this point
 			  0.0f, 1.0f, 0.0f); // camera's "tilt vector"
 
 	// configurations
 	glLineWidth(3);
 
+	// update ball position
+	ball.x += ball.x_speed * ball.speed_magnitude;
+	ball.y += ball.y_speed * ball.speed_magnitude;
+
 	int aux = 0;
 	// detect collisions with walls
 	for (int i=0; i<walls.size(); i++) {
 		aux = ball.collidesWall(walls[i].x1, walls[i].y1, walls[i].x2, walls[i].y2);
+		//printf("%d ", aux);
 		if (aux != 0) ball.reflectSpeedVector(aux);
 	}
 
 	// detect collisions with bricks
 	for (int i=0; i<bricks.size(); i++) {
+		if (bricks[i].times == 0) continue;
 		aux = ball.collidesBrick(bricks[i].x, bricks[i].y);
 		if (aux != 0) {
 			ball.reflectSpeedVector(aux);
-			if (bricks[i].times == 1.0) bricks[i].destroy();
-			if (bricks[i].times == 2.0) bricks[i].times = 1.0; 
+			bricks[i].times--;
 		}
 	}
 
@@ -316,40 +339,71 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	// draw walls
 	for (int i=0; i<walls.size(); i++) walls[i].draw();
 
-	// draw pad
 	pad.draw();
-
-	// draw ball
 	ball.draw();
 
 	glutSwapBuffers();
 }
 
+int rand_int(int min, int max) { return min + (rand() % (int)(max - min + 1)); }
+
 void init_board() {
+	int x,y;
+	y = 45.0;
 	for (int i=0; i<NUMBER_ROWS_BRICKS; i++) {
-		for (int j=0; j<NUMBER_COLUMNS_BRICKS; j++)
-			bricks.push_back(Brick());
+		x = -27.0;
+		for (int j=0; j<NUMBER_COLUMNS_BRICKS; j++){
+			bricks.push_back(Brick(x, y));
+			x += 9.0;
+		}
+		y -= 5.0;
 	}
 
-	walls.push_back(Wall());
-	walls.push_back(Wall());
-	walls.push_back(Wall());
+	// initialize random seed
+	srand(time(NULL));
+
+	// put bonuses inside some random bricks
+	int bonuses_left = 6;
+	int rand_brick;
+
+	while (bonuses_left--) {
+		rand_brick = rand_int(0, bricks.size()-1);
+		bricks[rand_brick].has_bonus = true;
+	}
+
+	// evolve some bricks to make them 'special'
+	int specials_left = 5;
+	while (specials_left--) {
+		rand_brick = rand_int(0, bricks.size()-1);
+		bricks[rand_brick].is_special = true;
+		bricks[rand_brick].times = 2;
+	}
+
+	walls.push_back(Wall(-41.0, 50.0, -38.0, -3.0));
+	walls.push_back(Wall(38.0, 50.0, 41.0, -3.0));
+	walls.push_back(Wall(-41.0, 53.0, 41.0, 50.0));
+	
+	// TODO: remove this wall, it is just for testing
+	walls.push_back(Wall(-100.0, 0.0, 100.0, 0.0));
 }
 
 void processKeys(unsigned char key, int x, int y) {
 	if (key == 27) exit(0);
-}
 
-void processSpecialKeys(int key, int x, int y) {
 	switch (key) {
-	case GLUT_CURSOR_LEFT_ARROW:
+	case 27: 
+		exit(0);
+	break;
+	case 'a':
+	case 'A':
 		pad.moveLeft();
-		break;
-	case GLUT_CURSOR_RIGHT_ARROW:
+	break;
+	case 'd':
+	case 'D':
 		pad.moveRight();
-		break;
+	break;
 	default:
-		break;
+	break;
 	}
 }
 
@@ -365,7 +419,6 @@ int main (int argc, char** argv) {
 	glutDisplayFunc(render);
 	glutIdleFunc(render);
 	glutKeyboardFunc(processKeys);
-	glutSpecialFunc(processSpecialKeys);
 	glutReshapeFunc(changeSize);
 	
 	// initialize game board
