@@ -241,8 +241,14 @@ public:
 		glRectf(x1, y+1.0, x2, y-1.0); 
 	
 	}
-	void moveLeft() { x -= movement_magnitude; }
-	void moveRight() { x += movement_magnitude; }
+	void moveLeft() {
+		if (x - length >= -41.0f)
+			x -= movement_magnitude; 
+	}
+	void moveRight() {
+		if (x + length <= 41.0f)
+			x += movement_magnitude;
+	}
 } pad(0.0, 0.0, 10.0, 1.0);
 
 
