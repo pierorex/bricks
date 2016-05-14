@@ -167,9 +167,8 @@ public:
 class Brick {
 public:
 	float x, y, falling_magnitude;
-	int times;
+	int times, effect;
 	bool has_bonus, is_falling, is_special;
-	string effect;
 
 	Brick(float _x, float _y){
 		x = _x;
@@ -301,6 +300,7 @@ void apply_effect(string effect) {
 
 vector<Brick> bricks;
 vector<Wall> walls;
+vector<string> effects;
 
 
 void render(){ // Function to be called by openGL in every cycle of the main loop
@@ -346,7 +346,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 			bricks[i].moveDown();
 			aux = pad.collidesBonus(bricks[i].x, bricks[i].y);
 			if (aux != 0){
-				apply_effect(bricks[i].effect);
+				apply_effect(effects[bricks[i].effect]);
 				bricks[i].destroyBonus();
 			}
 		}
@@ -388,12 +388,13 @@ void init_board() {
 	srand(time(NULL));
 
 	// put bonuses inside some random bricks
-	int bonuses_left = 6;
-	int rand_brick;
+	int bonuses_left = 6, rand_brick, rand_effect;
 
 	while (bonuses_left--) {
 		rand_brick = rand_int(0, bricks.size()-1);
+		rand_effect = rand_int(0, 1);
 		bricks[rand_brick].has_bonus = true;
+		bricks[rand_brick].effect = rand_effect;
 	}
 
 	// evolve some bricks to make them 'special'
@@ -402,6 +403,7 @@ void init_board() {
 		rand_brick = rand_int(0, bricks.size()-1);
 		bricks[rand_brick].is_special = true;
 		bricks[rand_brick].times = 2;
+		
 	}
 
 	walls.push_back(Wall(-41.0, 50.0, -38.0, -3.0));
@@ -410,6 +412,9 @@ void init_board() {
 	
 	// TODO: remove this wall, it is just for testing
 	walls.push_back(Wall(-100.0, 0.0, 100.0, 0.0));
+
+	effects.push_back(string("ball_speed_up"));
+	effects.push_back(string("pad_shrink"));
 }
 
 void processKeys(unsigned char key, int x, int y) {
