@@ -73,7 +73,22 @@ int collisionLine(float xBrick, float yBrick, float xball, float yball, float ra
 
 }
 
-int collisionCircle(float xBrick, float yBrick, float xball, float yball, float radius, float height, float width){
+void explote(float x, float y, float i){
+	glColor3f(1.0, 1.0, 1.0);
+	drawCircle(x, y+0.001*i, 0.5);
+	drawCircle(x+0.001*i, y+0.001*i, 0.5);
+	drawCircle(x-0.001*i, y+0.001*i, 0.5);
+	drawCircle(x+0.003*i, y+0.003*i, 0.5);
+	drawCircle(x-0.003*i, y+0.003*i, 0.5);
+	drawCircle(x+0.005*i, y, 0.5);
+	drawCircle(x-0.005*i, y, 0.5);
+	drawCircle(x, y-0.001*i, 0.5);
+	drawCircle(x-0.002*i, y-0.002*i, 0.5);
+	drawCircle(x+0.002*i, y-0.002*i, 0.5);
+	drawCircle(x+0.004*i, y-0.003*i, 0.5);
+}
+
+int collisionCircle(float xBrick, float yBrick, float xball, float yball, float radius, float height, float width, float x_speed, float y_speed){
 
 	float x1 = xBrick - width - xball;
 	float x2 = xBrick + width - xball;
@@ -81,8 +96,19 @@ int collisionCircle(float xBrick, float yBrick, float xball, float yball, float 
 	float y2 = yBrick - height - yball;
 	float r = radius * radius;
 
-	if (x1*x1 + y1*y1 <= r || x1*x1 + y2*y2 <= r || x2*x2 + y1*y1 <= r || x2*x2 + y2*y2 <= r) return 3;
-	return 0;
+	if (x1*x1 + y1*y1 - r <= eps && x1*x1 + y1*y1 - r >= 0 && x_speed < 0 && y_speed < 0) return 1;
+	else if (x1*x1 + y2*y2 - r <= eps && x1*x1 + y2*y2 - r >= 0 && x_speed < 0 && y_speed > 0) return 1;
+	else if (x2*x2 + y1*y1 - r <= eps && x2*x2 + y1*y1 - r >= 0 && x_speed > 0 && y_speed < 0) return 1;
+	else if (x2*x2 + y2*y2 - r <= eps && x2*x2 + y2*y2 - r >= 0 && x_speed > 0 && y_speed > 0) return 1;
+	else if (x1*x1 + y1*y1 - r <= eps && x1*x1 + y1*y1 - r >= 0 && x_speed > 0 && y_speed > 0) return 2;
+	else if (x1*x1 + y2*y2 - r <= eps && x1*x1 + y2*y2 - r >= 0 && x_speed > 0 && y_speed < 0) return 2;
+	else if (x2*x2 + y1*y1 - r <= eps && x2*x2 + y1*y1 - r >= 0 && x_speed < 0 && y_speed > 0) return 2;
+	else if (x2*x2 + y2*y2 - r <= eps && x2*x2 + y2*y2 - r >= 0 && x_speed < 0 && y_speed < 0) return 2;
+	else if ((x1*x1 + y2*y2 - r <= eps && x1*x1 + y2*y2 - r >= 0)
+	  ||(x2*x2 + y1*y1 - r <= eps && x2*x2 + y1*y1 - r >= 0)) return 3;
+	else if (x1*x1 + y1*y1 - r <= eps && x1*x1 + y1*y1 - r >= 0) return 2;
+	else if (x2*x2 + y2*y2 - r <= eps && x2*x2 + y2*y2 - r >= 0) return 2;
+	else return 0;
 }
 
 class Ball {
@@ -108,13 +134,13 @@ public:
 		int a = collisionLine(xBrick, yBrick, x, y, radius, 1, 3);
 		if (a != 0){
 			return a;
+		} else {	
+			a = collisionCircle(xBrick, yBrick, x, y, radius, 1, 3, x_speed, y_speed);
+			if (a != 0) {
+				return a;
+			}
+			return 0;
 		}
-		// Collision Corner
-		a = collisionCircle(xBrick, yBrick, x, y, radius, 1, 3);
-		if (a != 0) {
-			return a;
-		}
-		return 0;
 	}
 
 	int collidesWall(float x1, float y1, float x2, float y2){
@@ -140,16 +166,15 @@ public:
 			return a;
 		} else {
 			// Collision Vertex
-			return 0;//collisionCircle(xPad, yPad, x, y, radius, 1, len/2);
+			return collisionCircle(xPad, yPad, x, y, radius, 1, len/2, x_speed, y_speed);
 		}
 	}
 
 	void reflectSpeedVector(int collisionPoint){
 		// Line
 		if (collisionPoint == 1) y_speed *= -1;
-		if (collisionPoint == 2) x_speed *= -1;
-		// Corner
-		if (collisionPoint == 3) {
+		else if (collisionPoint == 2) x_speed *= -1;
+		else if (collisionPoint == 3) {
 			float aux = y_speed;
 			y_speed = x_speed*(-1);
 			x_speed = aux*(-1);
@@ -166,7 +191,7 @@ public:
 
 class Brick {
 public:
-	float x, y, falling_magnitude;
+	float x, y, falling_magnitude, i;
 	int times, effect;
 	bool has_bonus, is_falling, is_special;
 
@@ -178,9 +203,16 @@ public:
 		times = 1;
 		is_falling = false;
 		falling_magnitude = 0.01f;
+		i = 0;
 	}
 
 	void draw(){
+
+		if (is_special && times == 0 && i < 1000){
+			explote(x, y, i);
+			i++;
+		}
+
 		if (times == 0 && !is_falling) return;
 		if (is_falling) {
 			// draw as falling bonus
