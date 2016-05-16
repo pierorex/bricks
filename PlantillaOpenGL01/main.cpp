@@ -260,7 +260,7 @@ public:
 		y += y_speed * speed_magnitude;
 	}
 
-} ball(0.1, 4.0, -0.001, 0.001, 30.0, 1.5);
+} ball(0.1, 4.0, -0.001, 0.001, 10.0, 1.5);
 
 
 class Brick {
@@ -367,7 +367,7 @@ public:
 	int collidesBonus(float xBonus, float yBonus) {
 		return collisionLine(xBonus, yBonus, x, y, 1, 1, length/2);
 	}
-} pad(0.0, 0.0, 10.0, 5.0);
+} pad(0.0, 0.0, 10.0, 2.0);
 
 
 class Wall {
@@ -530,7 +530,7 @@ void init_board() {
 	walls.push_back(Wall(-41.0, 53.0, 41.0, 50.0));
 	
 	// TODO: remove this wall, it is just for testing
-	walls.push_back(Wall(-100.0, 0.0, 100.0, 0.0));
+	//walls.push_back(Wall(-100.0, 0.0, 100.0, 0.0));
 
 	effects.push_back(string("ball_speed_up"));
 	effects.push_back(string("pad_shrink"));
