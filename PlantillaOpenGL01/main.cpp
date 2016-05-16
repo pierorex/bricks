@@ -6,7 +6,8 @@
 #include <time.h>       /* time */
 #include <GL\freeglut.h>
 
-/* requirements for fonts */
+/* requirements for fonts, 
+taken and modified from https://www.opengl.org/archives/resources/features/fontsurvey/sooft/examples/glutfonts.zip */
 #include <math.h>
 #ifdef WIN32
 #include <windows.h>
