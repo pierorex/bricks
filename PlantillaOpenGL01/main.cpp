@@ -186,6 +186,31 @@ int collisionCircle(float xBrick, float yBrick, float xball, float yball, float 
 	else return 0;
 }
 
+
+int collisionCircle2(float xBrick, float yBrick, float xball, float yball, float radius, float height, float width, float x_speed, float y_speed){
+
+	float x1 = xBrick - width - xball;
+	float x2 = xBrick + width - xball;
+	float y1 = yBrick + height - yball;
+	float y2 = yBrick - height - yball;
+	float r = radius * radius;
+
+	if (x1*x1 + y1*y1 - r <= eps && x1*x1 + y1*y1 - r >= 0 && x_speed < 0 && y_speed < 0) return 1;
+	else if (x1*x1 + y2*y2 - r <= eps && x1*x1 + y2*y2 - r >= 0 && x_speed < 0 && y_speed > 0) return 1;
+	else if (x2*x2 + y1*y1 - r <= eps && x2*x2 + y1*y1 - r >= 0 && x_speed > 0 && y_speed < 0) return 1;
+	else if (x2*x2 + y2*y2 - r <= eps && x2*x2 + y2*y2 - r >= 0 && x_speed > 0 && y_speed > 0) return 1;
+	else if (x1*x1 + y1*y1 - r <= eps && x1*x1 + y1*y1 - r >= 0 && x_speed > 0 && y_speed > 0) return 4;
+	else if (x1*x1 + y2*y2 - r <= eps && x1*x1 + y2*y2 - r >= 0 && x_speed > 0 && y_speed < 0) return 4;
+	else if (x2*x2 + y1*y1 - r <= eps && x2*x2 + y1*y1 - r >= 0 && x_speed < 0 && y_speed > 0) return 4;
+	else if (x2*x2 + y2*y2 - r <= eps && x2*x2 + y2*y2 - r >= 0 && x_speed < 0 && y_speed < 0) return 4;
+	else if ((x1*x1 + y2*y2 - r <= eps && x1*x1 + y2*y2 - r >= 0)
+	  ||(x2*x2 + y1*y1 - r <= eps && x2*x2 + y1*y1 - r >= 0)) return 4;
+	else if (x1*x1 + y1*y1 - r <= eps && x1*x1 + y1*y1 - r >= 0) return 4;
+	else if (x2*x2 + y2*y2 - r <= eps && x2*x2 + y2*y2 - r >= 0) return 4;
+	else return 0;
+}
+
+
 class Ball {
 public:
 	float x, y, y_speed, x_speed, speed_magnitude, radius;
@@ -237,11 +262,12 @@ public:
 	int collidesPad(float xPad, float yPad, float len){
 		// Collision in rect
 		int a = collisionLine(xPad, yPad, x, y, radius, 1, len/2); 
+
 		if (a != 0){
 			return a;
 		} else {
 			// Collision Vertex
-			return collisionCircle(xPad, yPad, x, y, radius, 1, len/2, x_speed, y_speed);
+			return collisionCircle2(xPad, yPad, x, y, radius, 1, len/2, x_speed, y_speed);
 		}
 	}
 
@@ -253,6 +279,9 @@ public:
 			float aux = y_speed;
 			y_speed = x_speed*(-1);
 			x_speed = aux*(-1);
+		} else if( collisionPoint == 4){
+			if (y_speed < 0) y_speed *= -1;;
+			x_speed *= -1;
 		}
 	}
 
@@ -459,6 +488,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	// detect collisions with pad
 	aux = ball.collidesPad(pad.x, pad.y, pad.length);
 	if (aux) {
+		if (aux == 2) aux = 4;
 		ball.reflectSpeedVector(aux);
 	}
 
@@ -475,7 +505,7 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	}
 
 	// show losing message if the ball falls down
-	if (ball.y < pad.y) {
+	if (ball.y < pad.y-4 && Brick::live_bricks != 0) {
 		draw_message(msg_x, msg_y, "You lost.. u.u Try again next time!");
 		draw_message(msg_x, msg_y - msg_y_separation, "Press [ESC] to leave.");
 	}
@@ -539,7 +569,6 @@ void init_board() {
 
 void processKeys(unsigned char key, int x, int y) {
 	if (key == 27) exit(0);
-
 	switch (key) {
 	case 27: 
 		exit(0);
@@ -555,6 +584,7 @@ void processKeys(unsigned char key, int x, int y) {
 	default:
 	break;
 	}
+	
 }
 
 int main (int argc, char** argv) {
