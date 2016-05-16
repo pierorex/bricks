@@ -1,9 +1,83 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <stdio.h>      /* NULL */
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <GL\freeglut.h>
+
+/* requirements for fonts */
+#include <math.h>
+#ifdef WIN32
+#include <windows.h>
+#endif
+typedef enum {
+    MODE_BITMAP,
+    MODE_STROKE
+} mode_type;
+
+static mode_type mode;
+static int font_index;
+
+void print_bitmap_string(void* font, char* s) {
+    if (s && strlen(s)) {
+       while (*s) {
+          glutBitmapCharacter(font, *s);
+          s++;
+       }
+    }
+}
+
+void print_stroke_string(void* font, char* s){
+    if (s && strlen(s)) {
+       while (*s) {
+          glutStrokeCharacter(font, *s);
+          s++;
+       }
+    }
+}
+
+void init_fonts() {
+    mode = MODE_BITMAP;
+    font_index = 0;
+}
+
+void draw_message(float x, float y, char *str) {
+    unsigned int i, j;
+    unsigned int count;
+    void* bitmap_fonts[7] = {
+       GLUT_BITMAP_9_BY_15,
+       GLUT_BITMAP_8_BY_13,
+       GLUT_BITMAP_TIMES_ROMAN_10,
+       GLUT_BITMAP_TIMES_ROMAN_24,
+       GLUT_BITMAP_HELVETICA_10,
+       GLUT_BITMAP_HELVETICA_12,
+       GLUT_BITMAP_HELVETICA_18     
+    };
+ 
+    char* bitmap_font_names[7] = {
+       "GLUT_BITMAP_9_BY_15",
+       "GLUT_BITMAP_8_BY_13",
+       "GLUT_BITMAP_TIMES_ROMAN_10",
+       "GLUT_BITMAP_TIMES_ROMAN_24",
+       "GLUT_BITMAP_HELVETICA_10",
+       "GLUT_BITMAP_HELVETICA_12",
+       "GLUT_BITMAP_HELVETICA_18"     
+    };
+    
+    GLfloat ystep, yild, stroke_scale;
+    
+    /* Draw the string, according to the current mode and font. */
+    glColor4f(0.0, 1.0, 0.0, 0.0);
+    ystep  = 10.0; // 100.0
+    yild   = 2.0;
+    glRasterPos2f(-150, y+1.25*yild);
+    print_bitmap_string(bitmap_fonts[font_index], bitmap_font_names[font_index]);
+	glRasterPos2f(x, y);
+	print_bitmap_string(bitmap_fonts[font_index], str);
+}
+/* end of requirements for fonts*/
+
 
 using namespace std;
 
@@ -191,6 +265,7 @@ public:
 
 class Brick {
 public:
+	static int live_bricks;
 	float x, y, falling_magnitude, i;
 	int times, effect;
 	bool has_bonus, is_falling, is_special;
@@ -256,17 +331,11 @@ public:
 		}
 	}
 
-	void bonus(){
-		glRectf(x-2, y+1, x+2, y-1);
-	}
+	void bonus(){ glRectf(x-2, y+1, x+2, y-1); }
 
-	void moveDown(){
-		y -= falling_magnitude;
-	}
+	void moveDown(){ y -= falling_magnitude; }
 
-	void destroyBonus() {
-		is_falling = false;
-	}
+	void destroyBonus() { is_falling = false; }
 }; 
 
 
@@ -285,7 +354,6 @@ public:
 		float x1 = x-(length/2); 
 		float x2 = x+(length/2);
 		glRectf(x1, y+1.0, x2, y-1.0); 
-	
 	}
 	void moveLeft() {
 		if (x - length >= -41.0f)
@@ -299,7 +367,7 @@ public:
 	int collidesBonus(float xBonus, float yBonus) {
 		return collisionLine(xBonus, yBonus, x, y, 1, 1, 1);
 	}
-} pad(0.0, 0.0, 10.0, 1.0);
+} pad(0.0, 0.0, 10.0, 2.0);
 
 
 class Wall {
@@ -336,6 +404,7 @@ vector<string> effects;
 
 
 void render(){ // Function to be called by openGL in every cycle of the main loop
+	float msg_x = -30.0, msg_y = 20.0, msg_y_separation = 5.0;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// clear transformations
@@ -367,8 +436,10 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 		if (aux != 0) {
 			ball.reflectSpeedVector(aux);
 			bricks[i].times--;
-			if (bricks[i].has_bonus && bricks[i].times == 0)
-				bricks[i].is_falling = true;
+			if (bricks[i].times == 0) {
+				Brick::live_bricks--;
+				if (bricks[i].has_bonus) bricks[i].is_falling = true;
+			}
 		}
 	}
 
@@ -396,6 +467,19 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 	// draw walls
 	for (int i=0; i<walls.size(); i++) walls[i].draw();
 
+	// show winning message if there are no more bricks to break
+	if (Brick::live_bricks == 0) { 
+		draw_message(msg_x, msg_y, "You won! Congratulations :D");
+		draw_message(msg_x, msg_y - msg_y_separation, "Press [ESC] to leave.");
+	}
+
+	// show losing message if the ball falls down
+	if (ball.y < pad.y) {
+		draw_message(msg_x, msg_y, "You lost.. u.u Try again next time!");
+		draw_message(msg_x, msg_y - msg_y_separation, "Press [ESC] to leave.");
+	}
+
+	// draw pad and ball
 	pad.draw();
 	ball.draw();
 
@@ -403,6 +487,9 @@ void render(){ // Function to be called by openGL in every cycle of the main loo
 }
 
 int rand_int(int min, int max) { return min + (rand() % (int)(max - min + 1)); }
+
+// define number of bricks alive from start
+int Brick::live_bricks = NUMBER_OF_BRICKS;
 
 void init_board() {
 	int x,y;
@@ -443,7 +530,7 @@ void init_board() {
 	walls.push_back(Wall(-41.0, 53.0, 41.0, 50.0));
 	
 	// TODO: remove this wall, it is just for testing
-	walls.push_back(Wall(-100.0, 0.0, 100.0, 0.0));
+	//walls.push_back(Wall(-100.0, 0.0, 100.0, 0.0));
 
 	effects.push_back(string("ball_speed_up"));
 	effects.push_back(string("pad_shrink"));
@@ -485,6 +572,9 @@ int main (int argc, char** argv) {
 	
 	// initialize game board
 	init_board();
+
+	// initialize fonts
+	init_fonts();
 
 	// enter main loop
 	glutMainLoop();
